@@ -8,7 +8,6 @@
     * { box-sizing: border-box; }
     html {
       background: #fff;
-      zoom: 1.2;
     }
     /*
       Bez min-height na výšku okna — dokument končí u obsahu, žádný umělý prázdný pás dole.
@@ -36,7 +35,7 @@
       width: 100%;
       max-width: calc(100vw - 2rem);
       margin-inline: auto;
-      margin-top: 70px;
+      margin-top: 84px;
       padding: 0.35rem 1.5rem 0.4rem;
       background: #fff;
       border-radius: 12px;
@@ -78,7 +77,7 @@
       width: 100%;
       max-width: min(920px, 98vw);
       margin-inline: auto;
-      touch-action: manipulation;
+      touch-action: pan-y;
       padding-bottom: clamp(10px, 2.5vw, 20px);
       /*
         Symetrický okraj: stejně vlevo/vpravo, aby byl sloup vah uprostřed;
@@ -134,9 +133,9 @@
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
       z-index: 6;
     }
-    /* Nad přesahem okrajů misky, jen dokud je kus ještě u palety (ne na misce). */
+    /* Nad zásobníkem závaží (z-index 10), jen dokud je kus ještě u palety. */
     .palette-food--slot.pan-drag:not(.on-left-pan):not(.on-right-pan) {
-      z-index: 8;
+      z-index: 12;
     }
     .pan-drag:active { cursor: grabbing; }
     .pan-drag.is-dragging {
@@ -159,7 +158,8 @@
       justify-items: center;
       gap: 12px 18px;
       pointer-events: none;
-      z-index: 5;
+      /* Nad .scale-layer--pan-rims (7), aby šlo závaží spolehlivě „chytit“ i při překryvu. */
+      z-index: 10;
     }
     .weights-tray .weight {
       pointer-events: auto;
@@ -1029,6 +1029,18 @@
         el.remove();
       }
 
+      const DRAG_WINDOW_OPTS = { capture: true, passive: false };
+
+      function detachWindowDragListeners() {
+        window.removeEventListener("pointermove", onPointerMove, DRAG_WINDOW_OPTS);
+        window.removeEventListener("pointerup", onPointerUp, DRAG_WINDOW_OPTS);
+        window.removeEventListener(
+          "pointercancel",
+          onPointerUp,
+          DRAG_WINDOW_OPTS
+        );
+      }
+
       function onPointerDown(e) {
         const src = e.target.closest(".pan-drag");
         if (!src) return;
@@ -1057,10 +1069,15 @@
           cbOy,
         };
         setPositionPx(el, er.left - wr.left - cbOx, er.top - wr.top - cbOy);
+
+        window.addEventListener("pointermove", onPointerMove, DRAG_WINDOW_OPTS);
+        window.addEventListener("pointerup", onPointerUp, DRAG_WINDOW_OPTS);
+        window.addEventListener("pointercancel", onPointerUp, DRAG_WINDOW_OPTS);
       }
 
       function onPointerMove(e) {
         if (!drag || e.pointerId !== drag.pid) return;
+        e.preventDefault();
         const wr = wrapRect();
         const el = drag.el;
         const { w, h } = elementSize(el);
@@ -1074,6 +1091,7 @@
 
       function onPointerUp(e) {
         if (!drag || e.pointerId !== drag.pid) return;
+        detachWindowDragListeners();
         const el = drag.el;
         try {
           el.releasePointerCapture(e.pointerId);
@@ -1103,10 +1121,7 @@
         updateClearWeightsButtonState();
       }
 
-      stage.addEventListener("pointerdown", onPointerDown);
-      stage.addEventListener("pointermove", onPointerMove);
-      stage.addEventListener("pointerup", onPointerUp);
-      stage.addEventListener("pointercancel", onPointerUp);
+      stage.addEventListener("pointerdown", onPointerDown, { passive: false });
 
       window.addEventListener(
         "resize",
