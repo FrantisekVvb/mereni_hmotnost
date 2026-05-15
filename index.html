@@ -8,7 +8,20 @@
     * { box-sizing: border-box; }
     html {
       background: #fff;
+      --ui-scale: 1.2;
     }
+    /*
+      +20 % přes transform na `.app-root`; výkonové pozice (`style.left/top`) řeší skript přes --ui-scale.
+      Šířka layoutu / scale ⇒ vizuálně ~ zaplněné okno.
+    */
+    .app-root {
+      transform: scale(var(--ui-scale));
+      transform-origin: top center;
+      width: calc(100% / var(--ui-scale));
+      max-width: calc((100vw - 2rem) / var(--ui-scale));
+      margin-inline: auto;
+    }
+
     /*
       Bez min-height na výšku okna — dokument končí u obsahu, žádný umělý prázdný pás dole.
     */
@@ -20,7 +33,10 @@
       justify-content: flex-start;
       gap: 0;
       padding-top: max(0.35rem, env(safe-area-inset-top, 0px));
-      padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(
+        max(0.35rem, env(safe-area-inset-bottom, 0px)) + 2.5rem +
+          (var(--ui-scale) - 1) * 28vmin
+      );
       font-family: system-ui, sans-serif;
       background: #fff;
       color: #1d1d1c;
@@ -33,7 +49,7 @@
     main {
       align-self: stretch;
       width: 100%;
-      max-width: calc(100vw - 2rem);
+      max-width: 100%;
       margin-inline: auto;
       margin-top: 84px;
       padding: 0.35rem 1.5rem 0.4rem;
@@ -45,7 +61,7 @@
       display: flex;
       justify-content: center;
       width: 100%;
-      max-width: min(920px, 98vw);
+      max-width: min(920px, 100%);
       margin-inline: auto;
       margin-bottom: 0.45rem;
     }
@@ -75,7 +91,7 @@
       display: flex;
       justify-content: center;
       width: 100%;
-      max-width: min(920px, 98vw);
+      max-width: min(920px, 100%);
       margin-inline: auto;
       touch-action: pan-y;
       padding-bottom: clamp(10px, 2.5vw, 20px);
@@ -91,7 +107,7 @@
     .scale-wrap {
       position: relative;
       line-height: 0;
-      max-width: min(720px, 92vw);
+      max-width: min(720px, 100%);
     }
     .scale-art {
       position: relative;
@@ -150,7 +166,7 @@
       left: calc(100% + 12px);
       top: 6%;
       width: max-content;
-      max-width: calc(100vw - 2rem - 48px);
+      max-width: calc((100vw - 2rem - 48px) / var(--ui-scale));
       display: grid;
       grid-template-columns: repeat(2, max-content);
       grid-auto-rows: max-content;
@@ -323,7 +339,8 @@
   </style>
 </head>
 <body>
-  <main>
+  <div class="app-root">
+    <main>
     <div class="scale-toolbar">
       <button
         type="button"
@@ -477,7 +494,8 @@
         aria-live="polite"
       ></div>
     </section>
-  </main>
+    </main>
+  </div>
   <script>
     (function () {
       const stage = document.getElementById("stage");
@@ -626,6 +644,19 @@
         return scaleWrap.getBoundingClientRect();
       }
 
+      /** Viewport px → layout px pro `style.left/top` při `transform: scale(--ui-scale)` na předkovi. */
+      function dragLayoutFactor() {
+        const raw = getComputedStyle(document.documentElement)
+          .getPropertyValue("--ui-scale")
+          .trim();
+        const n = parseFloat(raw);
+        return Number.isFinite(n) && n > 0 ? n : 1;
+      }
+
+      function viewportOffsetToLayoutPx(vPx) {
+        return vPx / dragLayoutFactor();
+      }
+
       /** Rozměry vykresleného `<svg>` (pro zásobník závaží apod.). */
       function svgLayerBoundingRect() {
         return scaleWrap
@@ -645,9 +676,10 @@
       function applyTrayWeightSizes() {
         const sr = svgLayerBoundingRect();
         if (sr.width <= 0) return;
+        const innerLayW = viewportOffsetToLayoutPx(sr.width);
         weights.forEach((el) => {
           const g = Number(el.dataset.massG);
-          const { w, h } = weightTraySizePx(g, sr.width);
+          const { w, h } = weightTraySizePx(g, innerLayW);
           el.style.width = `${w}px`;
           el.style.height = `${h}px`;
         });
@@ -655,7 +687,7 @@
 
       function panHookYOffsetViewBox() {
         const sr = svgLayerBoundingRect();
-        const h = sr.height;
+        const h = viewportOffsetToLayoutPx(sr.height);
         if (h <= 0) return 0;
         return (PAN_OFFSET_DOWN_PX / h) * VB_H;
       }
@@ -712,7 +744,9 @@
         const wr = wrapRect();
         const ir = el.getBoundingClientRect();
         const cxEl = (ir.left + ir.right) / 2 - wr.left;
-        el.dataset.panPlaceOffsetX = String(cxEl - surf.cx);
+        el.dataset.panPlaceOffsetX = String(
+          viewportOffsetToLayoutPx(cxEl - surf.cx)
+        );
       }
 
       function pickSnapPan(ir, releaseClientX, releaseClientY) {
@@ -798,23 +832,36 @@
       }
 
       function repositionWeightsOnPan(which) {
-        const surf = panSurfaceWrapPx(which);
+        const f = dragLayoutFactor();
+        const surfV = panSurfaceWrapPx(which);
+        const surf = {
+          cx: surfV.cx / f,
+          cy: surfV.cy / f,
+          bottom: surfV.bottom / f,
+        };
         const panEl = which === "left" ? panLeft : panRight;
-        const bounds = panTargetBoundsWrapPx(panEl);
+        const boundsV = panTargetBoundsWrapPx(panEl);
+        const bounds = {
+          left: boundsV.left / f,
+          right: boundsV.right / f,
+          top: boundsV.top / f,
+          bottom: boundsV.bottom / f,
+        };
         const edgePad = 2;
         const sel =
           which === "left" ? ".weight.on-left-pan" : ".weight.on-right-pan";
         scaleWrap.querySelectorAll(sel).forEach((el) => {
           if (el.classList.contains("is-dragging")) return;
           const { w, h } = elementSize(el);
+          const wL = w / f;
+          const hL = h / f;
           const offsetX = Number(el.dataset.panPlaceOffsetX || 0);
-          let left = surf.cx - w / 2 + offsetX;
+          let left = surf.cx - wL / 2 + offsetX;
           const lo = bounds.left + edgePad;
-          const hi = bounds.right - w - edgePad;
+          const hi = bounds.right - wL - edgePad;
           if (hi >= lo) left = clamp(left, lo, hi);
           else left = (lo + hi) / 2;
-          const top =
-            surf.bottom - h + PAN_ITEM_SURFACE_PAD_PX;
+          const top = surf.bottom - hL + PAN_ITEM_SURFACE_PAD_PX;
           setPositionPx(el, left, top);
         });
       }
@@ -827,22 +874,36 @@
             !el.classList.contains("on-right-pan"))
         )
           return;
+        const f = dragLayoutFactor();
         const which = el.classList.contains("on-left-pan") ? "left" : "right";
-        const surf = panSurfaceWrapPx(which);
+        const surfV = panSurfaceWrapPx(which);
+        const surf = {
+          cx: surfV.cx / f,
+          cy: surfV.cy / f,
+          bottom: surfV.bottom / f,
+        };
         const panEl = which === "left" ? panLeft : panRight;
-        const bounds = panTargetBoundsWrapPx(panEl);
+        const boundsV = panTargetBoundsWrapPx(panEl);
+        const bounds = {
+          left: boundsV.left / f,
+          right: boundsV.right / f,
+          top: boundsV.top / f,
+          bottom: boundsV.bottom / f,
+        };
         const edgePad = 2;
         const { w, h } = elementSize(el);
+        const wL = w / f;
+        const hL = h / f;
         const offsetX = Number(el.dataset.panPlaceOffsetX || 0);
-        let left = surf.cx - w / 2 + offsetX;
+        let left = surf.cx - wL / 2 + offsetX;
         const lo = bounds.left + edgePad;
-        const hi = bounds.right - w - edgePad;
+        const hi = bounds.right - wL - edgePad;
         if (hi >= lo) left = clamp(left, lo, hi);
         else left = (lo + hi) / 2;
         const surfacePad =
           PAN_ITEM_SURFACE_PAD_PX +
           (el === rohlik ? ROHLIK_SURFACE_EXTRA_PAD_PX : 0);
-        const top = surf.bottom - h + surfacePad;
+        const top = surf.bottom - hL + surfacePad;
         setPositionPx(el, left, top);
       }
 
@@ -1068,7 +1129,11 @@
           cbOx,
           cbOy,
         };
-        setPositionPx(el, er.left - wr.left - cbOx, er.top - wr.top - cbOy);
+        setPositionPx(
+          el,
+          viewportOffsetToLayoutPx(er.left - wr.left - cbOx),
+          viewportOffsetToLayoutPx(er.top - wr.top - cbOy)
+        );
 
         window.addEventListener("pointermove", onPointerMove, DRAG_WINDOW_OPTS);
         window.addEventListener("pointerup", onPointerUp, DRAG_WINDOW_OPTS);
@@ -1078,14 +1143,19 @@
       function onPointerMove(e) {
         if (!drag || e.pointerId !== drag.pid) return;
         e.preventDefault();
+        const f = dragLayoutFactor();
         const wr = wrapRect();
         const el = drag.el;
         const { w, h } = elementSize(el);
-        let left = e.clientX - wr.left - drag.grabDX - drag.cbOx;
-        let top = e.clientY - wr.top - drag.grabDY - drag.cbOy;
-        const padSide = 120;
-        left = clamp(left, -padSide - w * 0.35, wr.width + padSide);
-        top = clamp(top, -h * 0.65, wr.height + h * 0.95);
+        const wL = w / f;
+        const hL = h / f;
+        let left = (e.clientX - wr.left - drag.grabDX - drag.cbOx) / f;
+        let top = (e.clientY - wr.top - drag.grabDY - drag.cbOy) / f;
+        const padLay = 120;
+        const wrWLay = wr.width / f;
+        const wrHLay = wr.height / f;
+        left = clamp(left, -padLay - wL * 0.35, wrWLay + padLay);
+        top = clamp(top, -hL * 0.65, wrHLay + hL * 0.95);
         setPositionPx(el, left, top);
       }
 
