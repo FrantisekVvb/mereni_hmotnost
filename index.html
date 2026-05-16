@@ -6,9 +6,31 @@
   <title>mereni_hmotnost — rovnoramenné váhy</title>
   <style>
     * { box-sizing: border-box; }
+    @font-face {
+      font-family: "Fenomen Sans";
+      src: url("assets/fonts/FenomenSans-Book.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Fenomen Sans";
+      src: url("assets/fonts/FenomenSans-SemiBold.woff2") format("woff2");
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Fenomen Sans";
+      src: url("assets/fonts/FenomenSans-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
     html {
       background: #fff;
       --ui-scale: 1.2;
+      font-family: "Fenomen Sans", system-ui, sans-serif;
     }
     /*
       +20 % přes transform na `.app-root`; výkonové pozice (`style.left/top`) řeší skript přes --ui-scale.
@@ -37,7 +59,7 @@
         max(0.35rem, env(safe-area-inset-bottom, 0px)) + 2.5rem +
           (var(--ui-scale) - 1) * 28vmin
       );
-      font-family: system-ui, sans-serif;
+      font-family: inherit;
       background: #fff;
       color: #1d1d1c;
     }
@@ -420,7 +442,7 @@
         <img
           class="apple apple--gfx pan-drag"
           id="apple"
-          src="rovnoramenne_vahy/assets/jablko.svg"
+          src="assets/jablko.svg"
           alt="Jablko 112,84 g"
           width="65"
           height="68"
@@ -431,7 +453,7 @@
         <img
           class="rohlik rohlik--gfx pan-drag"
           id="rohlik"
-          src="rovnoramenne_vahy/assets/rohlik.svg"
+          src="assets/rohlik.svg"
           alt="Rohlík 41,42 g"
           width="156"
           height="118"
@@ -442,7 +464,7 @@
         <img
           class="sklenice-okurek sklenice-okurek--gfx pan-drag"
           id="skleniceOkurek"
-          src="rovnoramenne_vahy/assets/sklenice_okurek.svg"
+          src="assets/sklenice_okurek.svg"
           alt="Sklenice okurek 687 g"
           width="78"
           height="106"
@@ -453,7 +475,7 @@
         <img
           class="bonbon bonbon--gfx pan-drag"
           id="bonbon"
-          src="rovnoramenne_vahy/assets/bonbon.svg"
+          src="assets/bonbon.svg"
           alt="Bonbón 2,9 g"
           width="87"
           height="36"
@@ -464,7 +486,7 @@
         <img
           class="zlata-cihla zlata-cihla--gfx pan-drag"
           id="zlataCihla"
-          src="rovnoramenne_vahy/assets/zlata_cihla.svg"
+          src="assets/zlata_cihla.svg"
           alt="Zlatá cihla 1322 g"
           width="174"
           height="99"
@@ -691,7 +713,7 @@
           `<ellipse cx="35.5" cy="12.7293" rx="21.5" ry="1.97523" fill="black"/>` +
           `<path d="M29.5 18.5C30 17.5 29.5 14.5 29.5 14.5H41.5V18.5L48.5 24.5H22.5C22.5 24.5 29 19.5 29.5 18.5Z" fill="black" stroke="black"/>` +
           `<path d="M41.7222 14.5C41.7222 14.5 41.2222 17.5 41.7222 18.5C42.2222 19.5 49.7222 24.5 49.7222 24.5" stroke="black" fill="none"/>` +
-          `<text x="35.5" y="59.5" text-anchor="middle" dominant-baseline="central" font-family="system-ui,-apple-system,sans-serif" font-weight="600" fill="white" font-size="${fs}">${escapeHtml(
+          `<text x="35.5" y="59.5" text-anchor="middle" dominant-baseline="central" font-family="Fenomen Sans, system-ui, sans-serif" font-weight="600" fill="white" font-size="${fs}">${escapeHtml(
             label
           )}</text>` +
           `</svg>`;

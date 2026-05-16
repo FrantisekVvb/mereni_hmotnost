@@ -17,7 +17,8 @@ Pak v prohlížeči: `http://localhost:8080`
 | Cesta | Popis |
 |--------|--------|
 | `index.html` | UI, SVG váhy, skript simulace a ověření |
-| `rovnoramenne_vahy/assets/` | SVG obrázky (jablko, rohlík, pomocná grafika) |
+| `assets/` | SVG obrázky (jablko, rohlík, pomocná grafika) |
+| `assets/fonts/` | Fenomen Sans (Book, SemiBold, Bold, WOFF2) |
 
 ## GitHub Pages (volitelně)
 
