@@ -51,7 +51,7 @@
       width: 100%;
       max-width: 100%;
       margin-inline: auto;
-      margin-top: 84px;
+      margin-top: 54px;
       padding: 0.35rem 1.5rem 0.4rem;
       background: #fff;
       border-radius: 12px;
@@ -102,12 +102,17 @@
       padding-inline: clamp(96px, 22vw, 280px);
     }
     /*
-      Procenta musí sedět na kresbu vah; jablko a závaží přesahují přes absolutní pozice uvnitř `.scale-wrap`.
+      Geometrie vah a překryvy — `.scale-figure` je rámcová oblast kresby (pro %, drag, cíle).
+      Paleta potravin je flex sloupec vlevo od kresby (`justify-content: space-between`).
     */
     .scale-wrap {
       position: relative;
       line-height: 0;
       max-width: min(720px, 100%);
+    }
+    .scale-figure {
+      position: relative;
+      line-height: 0;
     }
     .scale-art {
       position: relative;
@@ -149,8 +154,8 @@
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
       z-index: 6;
     }
-    /* Nad zásobníkem závaží (z-index 10), jen dokud je kus ještě u palety. */
-    .palette-food--slot.pan-drag:not(.on-left-pan):not(.on-right-pan) {
+    /* Nad zásobníkem závaží (z-index 10), jen dokud je kus ještě u paletě. */
+    .food-palette .pan-drag:not(.on-left-pan):not(.on-right-pan) {
       z-index: 12;
     }
     .pan-drag:active { cursor: grabbing; }
@@ -158,9 +163,12 @@
       z-index: 20;
       cursor: grabbing;
     }
-    .apple--gfx { width: clamp(40px, 10vw, 65px); height: auto; }
-    .rohlik--gfx { width: clamp(52px, 13vw, 82px); height: auto; }
+    .apple--gfx { width: clamp(36px, 9vw, 58.5px); height: auto; }
+    .rohlik--gfx { width: clamp(62.4px, 15.6vw, 98.4px); height: auto; }
     /* Zásobník: vzorky přebijí .pan-drag relativní pozicí v mřížce; klony mají jen .pan-drag → absolute. */
+    .sklenice-okurek--gfx { width: clamp(48px, 12vw, 76px); height: auto; }
+    .bonbon--gfx { width: clamp(28px, 7vw, 46px); height: auto; }
+    .zlata-cihla--gfx { width: clamp(52px, 13vw, 84px); height: auto; }
     .weights-tray {
       position: absolute;
       left: calc(100% + 12px);
@@ -199,17 +207,43 @@
       width: 100%;
       height: 100%;
     }
-    /* Paleta vlevo od kresby: jablko + rohlík */
-    .palette-food--slot {
-      right: calc(100% + 10px);
-      left: auto;
-      margin: 0;
+    /* Paleta: 5 pevných řádků (1fr) — při tahu jedné položky ostatní neposkáčou. */
+    .food-palette {
+      position: absolute;
+      right: 100%;
+      margin-right: 10px;
+      top: clamp(4px, 1.5vmin, 16px);
+      bottom: clamp(4px, 1.5vmin, 16px);
+      display: grid;
+      grid-template-rows: repeat(5, 1fr);
+      align-items: center;
+      justify-items: center;
+      row-gap: clamp(8px, 2vmin, 18px);
+      width: max-content;
+      max-width: min(140px, 28vw);
+      pointer-events: none;
+      z-index: 12;
     }
-    .apple--slot {
-      top: 38%;
+    .food-palette__slot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      width: 100%;
     }
-    .rohlik--slot {
-      top: 56%;
+    .food-palette .pan-drag {
+      pointer-events: auto;
+      flex-shrink: 0;
+    }
+    .food-palette .pan-drag:not(.on-left-pan):not(.on-right-pan):not(.is-dragging) {
+      position: relative;
+      left: auto !important;
+      top: auto !important;
+      right: auto !important;
+      bottom: auto !important;
+    }
+    .food-palette .rohlik.pan-drag:not(.on-left-pan):not(.on-right-pan):not(.is-dragging) {
+      top: -10px !important;
     }
     /* Trojice pod váhami — rozvržení jako SVG 498×34 (3×143 + mezery). */
     .mass-verify {
@@ -353,6 +387,64 @@
     </div>
     <div class="stage" id="stage" aria-label="Pracovní plocha s váhami">
       <div class="scale-wrap">
+        <div class="scale-figure" id="scaleFigure">
+          <div class="food-palette" id="foodPalette" aria-label="Potraviny na paletě">
+            <div class="food-palette__slot">
+        <img
+          class="apple apple--gfx pan-drag"
+          id="apple"
+          src="rovnoramenne_vahy/assets/jablko.svg"
+          alt="Jablko 112,84 g"
+          width="65"
+          height="68"
+          draggable="false"
+        />
+            </div>
+            <div class="food-palette__slot">
+        <img
+          class="rohlik rohlik--gfx pan-drag"
+          id="rohlik"
+          src="rovnoramenne_vahy/assets/rohlik.svg"
+          alt="Rohlík 41,42 g"
+          width="156"
+          height="118"
+          draggable="false"
+        />
+            </div>
+            <div class="food-palette__slot">
+        <img
+          class="sklenice-okurek sklenice-okurek--gfx pan-drag"
+          id="skleniceOkurek"
+          src="rovnoramenne_vahy/assets/sklenice_okurek.svg"
+          alt="Sklenice okurek 687 g"
+          width="78"
+          height="106"
+          draggable="false"
+        />
+            </div>
+            <div class="food-palette__slot">
+        <img
+          class="bonbon bonbon--gfx pan-drag"
+          id="bonbon"
+          src="rovnoramenne_vahy/assets/bonbon.svg"
+          alt="Bonbón 2,9 g"
+          width="87"
+          height="36"
+          draggable="false"
+        />
+            </div>
+            <div class="food-palette__slot">
+        <img
+          class="zlata-cihla zlata-cihla--gfx pan-drag"
+          id="zlataCihla"
+          src="rovnoramenne_vahy/assets/zlata_cihla.svg"
+          alt="Zlatá cihla 1322 g"
+          width="174"
+          height="99"
+          draggable="false"
+        />
+            </div>
+          </div>
         <div class="scale-art">
 <svg xmlns="http://www.w3.org/2000/svg" width="360" height="376" viewBox="0 0 160 167" fill="none" class="scale scale-layer" role="img" aria-label="Rovnoramenné váhy">
 <defs><clipPath id="clip_scale_dyn"><rect width="160" height="166.9" fill="white"/></clipPath></defs>
@@ -386,21 +478,23 @@
 <path d="M80.9385 51.4483C83.9917 51.4483 86.4668 48.9731 86.4668 45.9199C86.4668 42.8667 83.9917 40.3916 80.9385 40.3916C77.8853 40.3916 75.4102 42.8667 75.4102 45.9199C75.4102 48.9731 77.8853 51.4483 80.9385 51.4483Z" fill="#FF8158" stroke="#803B50" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M83.5131 16.1991L80.6418 5.9873C80.6418 5.9873 77.9817 15.7185 77.8164 16.2144H77.8531C77.8286 16.3644 77.8164 16.5174 77.8164 16.6705C77.8195 18.2439 79.099 19.5143 80.6693 19.5112C82.2427 19.5081 83.5131 18.2286 83.51 16.6583C83.51 16.5021 83.4978 16.3491 83.4733 16.2022H83.51L83.5131 16.1991Z" fill="#FF184A" stroke="#803B50" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
 <path opacity="0.7" d="M79.209 41.7905C82.068 41.7905 84.3853 43.3303 84.3853 45.2281" stroke="white" stroke-width="1.83665" stroke-miterlimit="10" stroke-linecap="round"/>
-<g id="pan-right-root" transform="translate(134.955 45.95)"><g id="pan-right-counter" transform="rotate(0)"><g transform="translate(-22.418 -10.1813)">
-<circle id="pan-right-contact" cx="22.3643" cy="66.2937" r="1" visibility="hidden" pointer-events="none" aria-hidden="true"/>
+<g id="pan-right-root" transform="translate(134.955 45.95)"><g transform="translate(-22.418 -10.1813)">
 <path d="M22.418 0.612183C20.9211 0.612183 19.7089 1.82437 19.7089 3.32124C19.7089 5.13647 21.365 5.53747 22.3415 5.94766C23.3179 6.35784 25.1271 6.63947 25.1271 8.73937C25.1271 10.2362 23.9149 11.4484 22.418 11.4484" stroke="#515151" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M43.8729 62.1157V31.6334C43.8729 19.7839 34.2672 10.1813 22.4208 10.1813C10.5713 10.1813 0.968689 19.787 0.968689 31.6334V62.1157" stroke="#1D1D1C" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M22.418 11.4487C20.9211 11.4487 19.7089 10.2365 19.7089 8.73962" stroke="#515151" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
+</g><g id="pan-right-counter" transform="rotate(0)"><g transform="translate(-22.418 -10.1813)">
+<circle id="pan-right-contact" cx="22.3643" cy="66.2937" r="1" visibility="hidden" pointer-events="none" aria-hidden="true"/>
+<path d="M43.8729 62.1157V31.6334C43.8729 19.7839 34.2672 10.1813 22.4208 10.1813C10.5713 10.1813 0.968689 19.787 0.968689 31.6334V62.1157" stroke="#1D1D1C" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M22.3643 66.2937C34.3777 66.2937 44.1164 64.0282 44.1164 61.2337C44.1164 58.4391 34.3777 56.1737 22.3643 56.1737C10.351 56.1737 0.612244 58.4391 0.612244 61.2337C0.612244 64.0282 10.351 66.2937 22.3643 66.2937Z" fill="#878787"/>
 <path d="M41.2512 63.7444C43.0695 63.0036 44.1164 62.1496 44.1164 61.2343C44.1164 58.4395 34.376 56.1713 22.3643 56.1713C10.3526 56.1713 0.612244 58.4365 0.612244 61.2343C0.612244 62.1557 1.67443 63.0189 3.52333 63.7628" fill="#9D9D9C"/>
 <path d="M41.2512 63.7444C43.0695 63.0036 44.1164 62.1496 44.1164 61.2343C44.1164 58.4395 34.376 56.1713 22.3643 56.1713C10.3526 56.1713 0.612244 58.4365 0.612244 61.2343C0.612244 62.1557 1.67443 63.0189 3.52333 63.7628" stroke="#575756" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M3.5224 63.7626C6.57124 61.7821 13.4801 60.4291 22.3634 60.4291C31.2467 60.4291 38.229 61.6872 41.2534 63.7412" fill="#878787"/>
 </g></g></g>
-<g id="pan-left-root" transform="translate(26.043 46.11)"><g id="pan-left-counter" transform="rotate(0)"><g transform="translate(-22.418 -10.1813)"><g transform="translate(45 0) scale(-1 1)">
-<circle id="pan-left-contact" cx="22.3643" cy="66.2937" r="1" visibility="hidden" pointer-events="none" aria-hidden="true"/>
+<g id="pan-left-root" transform="translate(26.043 46.11)"><g transform="translate(-22.418 -10.1813)"><g transform="translate(45 0) scale(-1 1)">
 <path d="M22.418 0.612183C20.9211 0.612183 19.7089 1.82437 19.7089 3.32124C19.7089 5.13647 21.365 5.53747 22.3415 5.94766C23.3179 6.35784 25.1271 6.63947 25.1271 8.73937C25.1271 10.2362 23.9149 11.4484 22.418 11.4484" stroke="#515151" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M43.8729 62.1157V31.6334C43.8729 19.7839 34.2672 10.1813 22.4208 10.1813C10.5713 10.1813 0.968689 19.787 0.968689 31.6334V62.1157" stroke="#1D1D1C" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M22.418 11.4487C20.9211 11.4487 19.7089 10.2365 19.7089 8.73962" stroke="#515151" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
+</g></g><g id="pan-left-counter" transform="rotate(0)"><g transform="translate(-22.418 -10.1813)"><g transform="translate(45 0) scale(-1 1)">
+<circle id="pan-left-contact" cx="22.3643" cy="66.2937" r="1" visibility="hidden" pointer-events="none" aria-hidden="true"/>
+<path d="M43.8729 62.1157V31.6334C43.8729 19.7839 34.2672 10.1813 22.4208 10.1813C10.5713 10.1813 0.968689 19.787 0.968689 31.6334V62.1157" stroke="#1D1D1C" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M22.3643 66.2937C34.3777 66.2937 44.1164 64.0282 44.1164 61.2337C44.1164 58.4391 34.3777 56.1737 22.3643 56.1737C10.351 56.1737 0.612244 58.4391 0.612244 61.2337C0.612244 64.0282 10.351 66.2937 22.3643 66.2937Z" fill="#878787"/>
 <path d="M41.2512 63.7444C43.0695 63.0036 44.1164 62.1496 44.1164 61.2343C44.1164 58.4395 34.376 56.1713 22.3643 56.1713C10.3526 56.1713 0.612244 58.4365 0.612244 61.2343C0.612244 62.1557 1.67443 63.0189 3.52333 63.7628" fill="#9D9D9C"/>
 <path d="M41.2512 63.7444C43.0695 63.0036 44.1164 62.1496 44.1164 61.2343C44.1164 58.4395 34.376 56.1713 22.3643 56.1713C10.3526 56.1713 0.612244 58.4365 0.612244 61.2343C0.612244 62.1557 1.67443 63.0189 3.52333 63.7628" stroke="#575756" stroke-width="1.22444" stroke-linecap="round" stroke-linejoin="round"/>
@@ -412,24 +506,6 @@
 </div>
         <div class="pan-target pan-target--left" id="panLeft" aria-hidden="true"></div>
         <div class="pan-target pan-target--right" id="panRight" aria-hidden="true"></div>
-        <img
-          class="apple apple--gfx palette-food--slot apple--slot pan-drag"
-          id="apple"
-          src="rovnoramenne_vahy/assets/jablko.svg"
-          alt="Jablko 112,84 g"
-          width="65"
-          height="68"
-          draggable="false"
-        />
-        <img
-          class="rohlik rohlik--gfx palette-food--slot rohlik--slot pan-drag"
-          id="rohlik"
-          src="rovnoramenne_vahy/assets/rohlik.svg"
-          alt="Rohlík 41,42 g"
-          width="156"
-          height="118"
-          draggable="false"
-        />
         <div id="weightsTray" class="weights-tray" aria-label="Zásobník závaží"></div>
 <svg xmlns="http://www.w3.org/2000/svg" width="360" height="376" viewBox="0 0 160 167" fill="none" class="scale scale-layer scale-layer--pan-rims" aria-hidden="true">
 <defs><clipPath id="clip_scale_rims_dyn"><rect width="160" height="166.9" fill="white"/></clipPath></defs>
@@ -444,6 +520,7 @@
 </g>
 </g>
 </svg>
+        </div>
       </div>
     </div>
     <section class="mass-verify-row" aria-labelledby="mass-verify-heading">
@@ -484,7 +561,7 @@
         </div>
       </div>
       <p id="verify-mass-hint" class="sr-only">
-        Objekt pro ověření vyber kliknutím na jablko nebo rohlík na váze (nebo jej přesuň).
+        Objekt pro ověření vyber kliknutím na jablko, rohlík, sklenici okurek, bonbón nebo zlatou cihlu na váze (nebo jej přesuň).
         Ověření akceptuje odchylku ± 0,5 gramu. Číslo může mít desetinnou čárku i tečku.
       </p>
       <div
@@ -503,10 +580,15 @@
       const panRight = document.getElementById("panRight");
       const apple = document.getElementById("apple");
       const rohlik = document.getElementById("rohlik");
+      const skleniceOkurek = document.getElementById("skleniceOkurek");
+      const bonbon = document.getElementById("bonbon");
+      const zlataCihla = document.getElementById("zlataCihla");
       const weightsTray = document.getElementById("weightsTray");
       /** Jednorázové potraviny z palety (ne klony závaží). */
-      const PAN_FOOD_ELS = [apple, rohlik];
+      const PAN_FOOD_ELS = [apple, rohlik, skleniceOkurek, bonbon, zlataCihla];
       const scaleWrap = stage.querySelector(".scale-wrap");
+      const scaleFigure = document.getElementById("scaleFigure");
+      const foodPalette = document.getElementById("foodPalette");
       const beamGroup = document.getElementById("scale-beam");
       const beamGroupRims = document.getElementById("scale-beam-rims");
       const panRightCounter = document.getElementById("pan-right-counter");
@@ -529,6 +611,12 @@
       const APPLE_MASS_G = 112.84;
       /** Hmotnost rohlíku [g]. */
       const ROHLIK_MASS_G = 41.42;
+      /** Hmotnost sklenice okurek [g]. */
+      const SKLENICE_OKUREK_MASS_G = 687;
+      /** Hmotnost bonbónu [g]. */
+      const BONBON_MASS_G = 2.9;
+      /** Hmotnost zlaté cihly [g]. */
+      const ZLATA_CIHLA_MASS_G = 1322;
 
       /** Sada závaží [g]; velikost vizuálně ~ ∛(m/1000) jako u stejnorodého tělesa. */
       const WEIGHT_SET_G = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
@@ -641,7 +729,7 @@
       let tiltAnimLastTs = 0;
 
       function wrapRect() {
-        return scaleWrap.getBoundingClientRect();
+        return scaleFigure.getBoundingClientRect();
       }
 
       /** Viewport px → layout px pro `style.left/top` při `transform: scale(--ui-scale)` na předkovi. */
@@ -659,7 +747,7 @@
 
       /** Rozměry vykresleného `<svg>` (pro zásobník závaží apod.). */
       function svgLayerBoundingRect() {
-        return scaleWrap
+        return scaleFigure
           .querySelector("svg.scale-layer:not(.scale-layer--pan-rims)")
           .getBoundingClientRect();
       }
@@ -696,9 +784,32 @@
         return Math.min(Math.max(n, min), max);
       }
 
+      /** Ořízne pozici táhnutého prvku k obdéžníku `<main>` (layout px vůči `.scale-figure`). */
+      function clampDragIntoBounds(left, top, wL, hL) {
+        const wr = wrapRect();
+        const f = dragLayoutFactor();
+        const boundsRoot = stage.closest("main") || stage;
+        const sr = boundsRoot.getBoundingClientRect();
+        const m = 4;
+        const sL = (sr.left - wr.left) / f;
+        const sR = (sr.right - wr.left) / f;
+        const sT = (sr.top - wr.top) / f;
+        const sB = (sr.bottom - wr.top) / f;
+        const loX = Math.min(sL + m, sR - wL - m);
+        const hiX = Math.max(sL + m, sR - wL - m);
+        const loY = Math.min(sT + m, sB - hL - m);
+        const hiY = Math.max(sT + m, sB - hL - m);
+        return {
+          left: clamp(left, loX, hiX),
+          top: clamp(top, loY, hiY),
+        };
+      }
+
       function setPositionPx(el, left, top) {
         el.style.left = `${left}px`;
         el.style.top = `${top}px`;
+        el.style.right = "auto";
+        el.style.bottom = "auto";
         el.style.margin = "0";
       }
 
@@ -811,10 +922,35 @@
         );
       }
 
+      /** Klony závaží z misek zmizí, když je uživatel pustí nad zásobníkem. */
+      function shouldReturnWeightToTray(itemRect, releaseClientX, releaseClientY) {
+        const tr = weightsTray.getBoundingClientRect();
+        if (tr.width <= 0 && tr.height <= 0) return false;
+        if (intersects(itemRect, tr)) return true;
+        const p = SNAP_PAD_PX;
+        const loose = {
+          left: tr.left - p,
+          right: tr.right + p,
+          top: tr.top - p,
+          bottom: tr.bottom + p,
+        };
+        return (
+          releaseClientX >= loose.left &&
+          releaseClientX <= loose.right &&
+          releaseClientY >= loose.top &&
+          releaseClientY <= loose.bottom
+        );
+      }
+
       function massLeftG() {
         let m = 0;
         if (apple.classList.contains("on-left-pan")) m += APPLE_MASS_G;
         if (rohlik.classList.contains("on-left-pan")) m += ROHLIK_MASS_G;
+        if (skleniceOkurek.classList.contains("on-left-pan"))
+          m += SKLENICE_OKUREK_MASS_G;
+        if (bonbon.classList.contains("on-left-pan")) m += BONBON_MASS_G;
+        if (zlataCihla.classList.contains("on-left-pan"))
+          m += ZLATA_CIHLA_MASS_G;
         scaleWrap.querySelectorAll(".weight.on-left-pan").forEach((el) => {
           m += Number(el.dataset.massG);
         });
@@ -825,6 +961,11 @@
         let m = 0;
         if (apple.classList.contains("on-right-pan")) m += APPLE_MASS_G;
         if (rohlik.classList.contains("on-right-pan")) m += ROHLIK_MASS_G;
+        if (skleniceOkurek.classList.contains("on-right-pan"))
+          m += SKLENICE_OKUREK_MASS_G;
+        if (bonbon.classList.contains("on-right-pan")) m += BONBON_MASS_G;
+        if (zlataCihla.classList.contains("on-right-pan"))
+          m += ZLATA_CIHLA_MASS_G;
         scaleWrap.querySelectorAll(".weight.on-right-pan").forEach((el) => {
           m += Number(el.dataset.massG);
         });
@@ -1085,11 +1226,6 @@
         clearWeightsBtn.addEventListener("click", removeAllWeightsFromPans);
       }
 
-      function removeWeightCloneIfOffScale(el) {
-        if (PAN_FOOD_ELS.includes(el) || weightsTray.contains(el)) return;
-        el.remove();
-      }
-
       const DRAG_WINDOW_OPTS = { capture: true, passive: false };
 
       function detachWindowDragListeners() {
@@ -1107,17 +1243,21 @@
         if (!src) return;
         e.preventDefault();
 
+        /* Měření před změnou DOM — po přesunu potraviny z palety je chvíli absolute bez left/top a rect by „skočil“. */
+        const wr = wrapRect();
+        const er = src.getBoundingClientRect();
+
         let el = src;
         if (weights.includes(src) && weightsTray.contains(src)) {
           el = src.cloneNode(true);
           el.classList.remove("is-dragging");
-          scaleWrap.appendChild(el);
+          scaleFigure.appendChild(el);
+        } else if (PAN_FOOD_ELS.includes(el) && foodPalette.contains(el)) {
+          scaleFigure.appendChild(el);
         }
 
         if (PAN_FOOD_ELS.includes(el)) syncVerifyPanelFromFood(el);
 
-        const er = src.getBoundingClientRect();
-        const wr = wrapRect();
         const { ox: cbOx, oy: cbOy } = dragContainOriginInWrapPx(el);
         el.classList.add("is-dragging");
         el.setPointerCapture(e.pointerId);
@@ -1151,12 +1291,8 @@
         const hL = h / f;
         let left = (e.clientX - wr.left - drag.grabDX - drag.cbOx) / f;
         let top = (e.clientY - wr.top - drag.grabDY - drag.cbOy) / f;
-        const padLay = 120;
-        const wrWLay = wr.width / f;
-        const wrHLay = wr.height / f;
-        left = clamp(left, -padLay - wL * 0.35, wrWLay + padLay);
-        top = clamp(top, -hL * 0.65, wrHLay + hL * 0.95);
-        setPositionPx(el, left, top);
+        const c = clampDragIntoBounds(left, top, wL, hL);
+        setPositionPx(el, c.left, c.top);
       }
 
       function onPointerUp(e) {
@@ -1174,6 +1310,16 @@
 
         if (side) {
           snapOntoPan(el, side);
+        } else if (
+          el.classList.contains("weight") &&
+          !weightsTray.contains(el) &&
+          shouldReturnWeightToTray(ir, e.clientX, e.clientY)
+        ) {
+          el.remove();
+          layoutPanTargetsDeg();
+          repositionAllOnPanItems();
+          updateClearWeightsButtonState();
+          updateScaleAppearance();
         } else {
           if (
             el.classList.contains("on-left-pan") &&
@@ -1185,7 +1331,6 @@
             isFullyOffPan(panRight, ir)
           )
             el.classList.remove("on-right-pan");
-          removeWeightCloneIfOffScale(el);
           updateScaleAppearance();
         }
         updateClearWeightsButtonState();
@@ -1211,7 +1356,11 @@
       const verifyMassResult = document.getElementById("verify-mass-result");
 
       function truthMassForVerification(which) {
-        return which === "rohlik" ? ROHLIK_MASS_G : APPLE_MASS_G;
+        if (which === "rohlik") return ROHLIK_MASS_G;
+        if (which === "skleniceOkurek") return SKLENICE_OKUREK_MASS_G;
+        if (which === "bonbon") return BONBON_MASS_G;
+        if (which === "zlataCihla") return ZLATA_CIHLA_MASS_G;
+        return APPLE_MASS_G;
       }
 
       function parseUserGrams(raw) {
@@ -1229,6 +1378,15 @@
         } else if (el === rohlik) {
           verifySelectedObject = "rohlik";
           verifyObjectLabel.textContent = "Rohlík";
+        } else if (el === skleniceOkurek) {
+          verifySelectedObject = "skleniceOkurek";
+          verifyObjectLabel.textContent = "Sklenice okurek";
+        } else if (el === bonbon) {
+          verifySelectedObject = "bonbon";
+          verifyObjectLabel.textContent = "Bonbón";
+        } else if (el === zlataCihla) {
+          verifySelectedObject = "zlataCihla";
+          verifyObjectLabel.textContent = "Zlatá cihla";
         }
       }
 
@@ -1238,7 +1396,7 @@
         if (!verifySelectedObject) {
           verifyMassResult.dataset.status = "error";
           verifyMassResult.textContent =
-            "Nejdřív klikni na jablko nebo rohlík (nebo jej přesuň).";
+            "Nejdřív klikni na jablko, rohlík, sklenici okurek, bonbón nebo zlatou cihlu (nebo jej přesuň).";
           return;
         }
         if (!Number.isFinite(g)) {
