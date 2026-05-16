@@ -1414,22 +1414,25 @@
 
       function syncVerifyPanelFromFood(el) {
         if (!verifyObjectLabel || !PAN_FOOD_ELS.includes(el)) return;
-        if (el === apple) {
-          verifySelectedObject = "apple";
-          verifyObjectLabel.textContent = "Jablko";
-        } else if (el === rohlik) {
-          verifySelectedObject = "rohlik";
-          verifyObjectLabel.textContent = "Rohlík";
-        } else if (el === skleniceOkurek) {
-          verifySelectedObject = "skleniceOkurek";
-          verifyObjectLabel.textContent = "Sklenice okurek";
-        } else if (el === bonbon) {
-          verifySelectedObject = "bonbon";
-          verifyObjectLabel.textContent = "Bonbón";
-        } else if (el === zlataCihla) {
-          verifySelectedObject = "zlataCihla";
-          verifyObjectLabel.textContent = "Zlatá cihla";
+        const rows = [
+          [apple, "apple", "Jablko"],
+          [rohlik, "rohlik", "Rohlík"],
+          [skleniceOkurek, "skleniceOkurek", "Sklenice okurek"],
+          [bonbon, "bonbon", "Bonbón"],
+          [zlataCihla, "zlataCihla", "Zlatá cihla"],
+        ];
+        const hit = rows.find(([node]) => node === el);
+        if (!hit) return;
+        const [, nextKey, labelCs] = hit;
+        if (nextKey !== verifySelectedObject) {
+          if (verifyMassInput) verifyMassInput.value = "";
+          if (verifyMassResult) {
+            verifyMassResult.textContent = "";
+            verifyMassResult.removeAttribute("data-status");
+          }
         }
+        verifySelectedObject = nextKey;
+        verifyObjectLabel.textContent = labelCs;
       }
 
       function onVerifyMass() {
