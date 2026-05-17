@@ -18,7 +18,7 @@ Pak v prohlížeči: `http://localhost:8080`
 |--------|--------|
 | `index.html` | UI, SVG váhy, skript simulace a ověření |
 | `assets/` | SVG obrázky (jablko, rohlík, pomocná grafika) |
-| `assets/fonts/` | Fenomen Sans (Book, SemiBold, Bold, WOFF2) |
+| `assets/fonts/` | Fenomen Sans (Book, SemiBold OTF — viz `globals.css` v [vividbooks/VIVIDBOOKS_WEB_ESHOP](https://github.com/vividbooks/VIVIDBOOKS_WEB_ESHOP); váha 700 = Semi Bold) |
 
 ## GitHub Pages (volitelně)
 

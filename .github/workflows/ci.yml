@@ -18,4 +18,4 @@ jobs:
           test -f index.html
           test -d assets
           test -f assets/jablko.svg
-          test -f assets/fonts/FenomenSans-Book.woff2
+          test -f assets/fonts/FenomenSans-Book.otf
